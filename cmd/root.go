@@ -8,18 +8,17 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/thzoid/issue-mafia/util"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "issue-mafia",
-	Short: "Git hooks enforcer in local repositories",
-	Long: `issue-mafia is a Go application that locally enforces
-Git hooks fetched from a remote repository. That way,
-hooks can be easily managed and updated.
-`,
+	Short: "fetch and update git hooks on repository",
+	Long:  "synchronize local git hooks with a remote repository\nspecified in the local .issue-mafia configuration file.",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		recursive, _ := cmd.Root().Flags().GetBool("recursive")
+		util.ScanRepos(recursive)
 	},
 }
 
@@ -34,6 +33,5 @@ func Execute() {
 
 func init() {
 	// Recursiveness flag
-	var recursive bool
-	rootCmd.PersistentFlags().BoolVar(&recursive, "recursive", false, "search repos recursively in subfolders (default is false)")
+	rootCmd.Flags().BoolP("recursive", "r", false, "search repos recursively in subfolders")
 }

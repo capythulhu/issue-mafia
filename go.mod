@@ -2,4 +2,4 @@ module github.com/thzoid/issue-mafia
 
 go 1.16
 
-require github.com/spf13/cobra v1.3.0 // indirect
+require github.com/spf13/cobra v1.3.0
