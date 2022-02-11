@@ -14,8 +14,8 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "issue-mafia",
-	Short: "fetch and update git hooks on repository",
-	Long:  "synchronize local git hooks with a remote repository\nspecified in the local .issue-mafia configuration file.",
+	Short: "Fetch and update git hooks on repository",
+	Long:  "Synchronize local git hooks with a remote repository\nspecified in the local .issue-mafia configuration file.",
 	Run: func(cmd *cobra.Command, args []string) {
 		recursive, _ := cmd.Root().Flags().GetBool("recursive")
 		util.ScanRepos(recursive)

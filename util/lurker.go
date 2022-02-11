@@ -17,14 +17,20 @@ func hasConfig(path string) bool {
 	return err == nil
 }
 
+// Check if current directory is a git repository
+func CurrentDirStats() (dirIsRepo, dirHasConfig bool) {
+	ex, _ := os.Executable()
+	exPath := filepath.Dir(ex)
+
+	return isRepo(exPath), hasConfig(exPath)
+}
+
+// Scan repositories
 func ScanRepos(recursive bool) {
 	if recursive {
 
 	} else {
-		ex, err := os.Executable()
-		if err != nil {
-			panic(err)
-		}
+		ex, _ := os.Executable()
 		exPath := filepath.Dir(ex)
 
 		if !isRepo(exPath) {
