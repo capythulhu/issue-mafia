@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -12,27 +13,24 @@ import (
 )
 
 // Returns if current directory is a repo
-func isRepo(path string) bool {
+func IsRepo(path string) bool {
 	_, err := os.Stat(path + "/.git")
 	return err == nil
 }
 
 // Returns if current directory has config file
-func hasConfig(path string) bool {
+func HasConfig(path string) bool {
 	_, err := os.Stat(path + "/.issue-mafia")
 	return err == nil
 }
 
-// Check if current directory is a git repository
-func CurrentDirStats() (dirIsRepo, dirHasConfig bool) {
+// Get current directory path
+func GetCurrentDir() string {
 	ex, _ := os.Executable()
-	exPath := filepath.Dir(ex)
-
-	return isRepo(exPath), hasConfig(exPath)
+	return filepath.Dir(ex)
 }
 
-// DownloadFile will download a url to a local file. It's efficient because it will
-// write as it downloads and not load the whole file into memory.
+// Download single file and attribute specific permissions to it
 func downloadFile(path string, url string) error {
 	// Get the data
 	resp, err := http.Get(url)
@@ -54,12 +52,29 @@ func downloadFile(path string, url string) error {
 }
 
 // Update individual repository
-func UpdateRepo(path, repo, branch string) {
+func UpdateRepo(path string) (dirIsRepo, dirHasConfig bool) {
+	// Check if directory is repository and if it has config file
+	dirIsRepo, dirHasConfig = IsRepo(path), HasConfig(path)
+	if !dirIsRepo || !dirHasConfig {
+		if dirHasConfig && !dirIsRepo {
+			ErrorLogger.Println(path, "has an \u001b[100m .issue-mafia \u001b[0m config file, but is not a git repository.")
+		}
+		return
+	}
+
+	// Read configuration file
+	repo, branch, ok := readConfigFile(path)
+	if !ok {
+		return
+	}
+
+	// Fetch files from remote repo
 	files, status := FetchIntersectingFiles(repo, branch)
 	if files == nil {
 		ErrorLogger.Println("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
 	}
 
+	// Download files from remote repo
 	for _, file := range files {
 		completePath := path + "/.git/hooks/" + file
 		downloadFile(completePath, "https://raw.githubusercontent.com/"+repo+"/"+branch+"/"+file)
@@ -68,6 +83,11 @@ func UpdateRepo(path, repo, branch string) {
 			log.Fatal(err)
 		}
 	}
+
+	// Log success
+	InfoLogger.Println(path, "hooks synchronized from github.com/"+repo)
+
+	return
 }
 
 // Read configuration file on directory
@@ -93,23 +113,19 @@ func readConfigFile(path string) (repo, branch string, ok bool) {
 }
 
 // Update repositories
-func UpdateRepos(recursive bool) {
-	// Update current directory repository
-	ex, _ := os.Executable()
-	exPath := filepath.Dir(ex)
-	if isRepo(exPath) {
-		if hasConfig(exPath) {
-			if repo, branch, ok := readConfigFile(exPath); ok {
-				UpdateRepo(exPath, repo, branch)
+func UpdateRepos() {
+	currentPath := GetCurrentDir()
+	err := filepath.WalkDir(currentPath,
+		func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
 			}
-		} else if !recursive {
-			ErrorLogger.Fatalln("current repository has no \u001b[100m .issue-mafia \u001b[0m config file. please, run \u001b[100m issue-mafia init \u001b[0m to setup a config file on this directory.")
-		}
-	} else if !recursive {
-		ErrorLogger.Fatalln("current directory is not a git repository. if you want issue-mafia to look for repos in sub-directories, run \u001b[100m issue-mafia --recursive \u001b[0m.")
-	}
-
-	if recursive {
-
+			if path != currentPath {
+				UpdateRepo(path)
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
 	}
 }

@@ -14,7 +14,16 @@ var rootCmd = &cobra.Command{
 	Long:  "Synchronize local git hooks with a remote repository\nspecified in the local .issue-mafia configuration file.",
 	Run: func(cmd *cobra.Command, args []string) {
 		recursive, _ := cmd.Root().Flags().GetBool("recursive")
-		util.UpdateRepos(recursive)
+		currentPath := util.GetCurrentDir()
+		dirIsRepo, dirHasConfig := util.UpdateRepo(currentPath)
+		if !recursive && !dirIsRepo && !dirHasConfig {
+			util.ErrorLogger.Fatalln("current directory is not a git repository. if you want issue-mafia to look for repos in sub-directories, run \u001b[100m issue-mafia --recursive \u001b[0m.")
+		}
+
+		// Update repositories recursively
+		if recursive {
+			util.UpdateRepos()
+		}
 	},
 }
 
