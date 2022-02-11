@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 	Long:  "Synchronize local git hooks with a remote repository\nspecified in the local .issue-mafia configuration file.",
 	Run: func(cmd *cobra.Command, args []string) {
 		recursive, _ := cmd.Root().Flags().GetBool("recursive")
-		util.ScanRepos(recursive)
+		util.UpdateRepos(recursive)
 	},
 }
 
