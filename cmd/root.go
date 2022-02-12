@@ -13,16 +13,39 @@ var rootCmd = &cobra.Command{
 	Short: "Fetch and update git hooks on repository",
 	Long:  "Synchronize local git hooks with a remote repository\nspecified in the local .issue-mafia configuration file.",
 	Run: func(cmd *cobra.Command, args []string) {
+		// Recursive flag
 		recursive, _ := cmd.Root().Flags().GetBool("recursive")
+
+		// Get available repositories
+		paths := util.ScanDirs()
+		if recursive {
+			if len(paths) == 1 {
+				util.InfoLogger.Println("updating 1 repository...")
+			} else if len(paths) > 1 {
+				util.InfoLogger.Println("updating", len(paths), "repositories...")
+			}
+		} else {
+			if len(paths) == 1 {
+				util.InfoLogger.Println("updating current repository...")
+			}
+		}
+
+		// Update current repository (if avaliable)
 		currentPath := util.GetCurrentDir()
-		dirIsRepo, dirHasConfig := util.UpdateRepo(currentPath)
-		if !recursive && !dirIsRepo && !dirHasConfig {
-			util.ErrorLogger.Fatalln("current directory is not a git repository. if you want issue-mafia to look for repos in sub-directories, run \u001b[100m issue-mafia --recursive \u001b[0m.")
+		dirIsRepo, dirHasConfig, _ := util.UpdateRepo(currentPath)
+
+		// Show error messages for current repository
+		if !recursive && !dirHasConfig {
+			if dirIsRepo {
+				util.ErrorLogger.Fatalln("current directory has no \u001b[100m .issue-mafia \u001b[0m config file.")
+			} else {
+				util.ErrorLogger.Fatalln("current directory is not a git repository. if you want issue-mafia to look for repos in sub-directories, run \u001b[100m issue-mafia --recursive \u001b[0m.")
+			}
 		}
 
 		// Update repositories recursively
 		if recursive {
-			util.UpdateRepos()
+			util.UpdateRepos(paths)
 		}
 	},
 }

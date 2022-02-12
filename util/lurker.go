@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // Returns if current directory is a repo
@@ -52,20 +52,20 @@ func downloadFile(path string, url string) error {
 }
 
 // Update individual repository
-func UpdateRepo(path string) (dirIsRepo, dirHasConfig bool) {
+func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 	// Check if directory is repository and if it has config file
 	dirIsRepo, dirHasConfig = IsRepo(path), HasConfig(path)
 	if !dirIsRepo || !dirHasConfig {
 		if dirHasConfig && !dirIsRepo {
 			ErrorLogger.Println(path, "has an \u001b[100m .issue-mafia \u001b[0m config file, but is not a git repository.")
 		}
-		return
+		return dirIsRepo, dirHasConfig, false
 	}
 
 	// Read configuration file
 	repo, branch, ok := readConfigFile(path)
 	if !ok {
-		return
+		return dirIsRepo, dirHasConfig, false
 	}
 
 	// Fetch files from remote repo
@@ -74,20 +74,27 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig bool) {
 		ErrorLogger.Println("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
 	}
 
+	// Wait group for download synchronization
+	var wg sync.WaitGroup
+
 	// Download files from remote repo
 	for _, file := range files {
-		completePath := path + "/.git/hooks/" + file
-		downloadFile(completePath, "https://raw.githubusercontent.com/"+repo+"/"+branch+"/"+file)
-		err := os.Chmod(completePath, 0700)
-		if err != nil {
-			log.Fatal(err)
-		}
+		wg.Add(1)
+		go func(file string) {
+			defer wg.Done()
+			completePath := path + "/.git/hooks/" + file
+			downloadFile(completePath, "https://raw.githubusercontent.com/"+repo+"/"+branch+"/"+file)
+			os.Chmod(completePath, 0700)
+		}(file)
 	}
+
+	// Wait for downloads to be finished
+	wg.Wait()
 
 	// Log success
 	InfoLogger.Println(path, "hooks synchronized from github.com/"+repo)
 
-	return
+	return dirIsRepo, dirHasConfig, true
 }
 
 // Read configuration file on directory
@@ -112,20 +119,56 @@ func readConfigFile(path string) (repo, branch string, ok bool) {
 	return info[0], info[1], true
 }
 
-// Update repositories
-func UpdateRepos() {
+// Scan directories in folder
+func ScanDirs() []string {
+	paths := []string{}
 	currentPath := GetCurrentDir()
-	err := filepath.WalkDir(currentPath,
+	filepath.WalkDir(currentPath,
 		func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if path != currentPath {
-				UpdateRepo(path)
+			if IsRepo(path) && HasConfig(path) {
+				paths = append(paths, path)
 			}
 			return nil
 		})
-	if err != nil {
-		log.Println(err)
+
+	return paths
+}
+
+// Update repositories
+func UpdateRepos(paths []string) {
+	// Get current path
+	currentPath := GetCurrentDir()
+
+	// Wait group for download synchronization
+	var wg sync.WaitGroup
+
+	// Recursively update repositories
+	updatedRepos := 0
+	for _, path := range paths {
+		if path != currentPath {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				_, _, ok := UpdateRepo(path)
+				if ok {
+					updatedRepos++
+				}
+			}()
+		}
+	}
+
+	// Wait for repositories to be updated
+	wg.Wait()
+
+	// Show final log
+	if updatedRepos == 0 {
+		WarningLogger.Println("no issue-mafia repositories found on sub-directories.")
+	} else if updatedRepos == 1 {
+		InfoLogger.Println("1 repository synchronized successfully.")
+	} else {
+		InfoLogger.Println(updatedRepos, " repositories synchronized successfully.")
 	}
 }
