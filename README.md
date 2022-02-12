@@ -1,6 +1,6 @@
 # Welcome to issue-mafia!
 
-**issue-mafia** is an out-of-the-box CLI that helps you easily synchronize Git hooks with a remote repository. You can learn more about Git hooks [here](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks).
+**issue-mafia** is an out-of-the-box CLI that helps you to easily synchronize Git hooks with a remote repository. You can learn more about Git hooks [here](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks).
 
 ## Getting started
 
@@ -51,13 +51,13 @@ git push -u origin main
 
 ### Setting up synchronization on repository
 
-To tell issue-mafia that a specific repository need to have its hooks synchronized with a remote repository, use the following command:
+To tell issue-mafia that a specific repository needs to have its hooks synchronized with a remote repository, use the following command:
 
 ```
 issue-mafia init
 ```
 
-After completing the configuration file creation wizard and providing a valid issue-mafia configuration repository (explained in the previous step), an `.issue-mafia` file is going to be generated, and this repository is ready to have it's hooks matched with your remote origin.
+After completing the configuration file creation wizard and providing a valid issue-mafia configuration repository (explained in the previous step), an `.issue-mafia` file is going to be generated, and this repository is ready to have its hooks fetched from the specified remote origin.
 
 ### Synchronizing hooks
 
@@ -76,7 +76,7 @@ cd my-local-repo
 issue-mafia
 ```
 
-However, when many repositories have to be synchronized at once, there might be a folder structure similar to this one:
+However, when many repositories have to be synchronized at once, the repositories folder structure might be similar to this one:
 
 ```
 my-repos/
@@ -89,7 +89,7 @@ my-repos/
 ├─ ...
 ```
 
-In that case, the base command can be executed recursively and issue-mafia will automatically search for repositories in sub-folders:
+In that case, the base command can be executed using the `--recursive` flag, and issue-mafia will automatically search for repositories in sub-folders:
 
 ```
 cd my-repos
