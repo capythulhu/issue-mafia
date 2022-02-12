@@ -26,8 +26,9 @@ func HasConfig(path string) bool {
 
 // Get current directory path
 func GetCurrentDir() string {
-	ex, _ := os.Executable()
-	return filepath.Dir(ex)
+	// ex, _ := os.Executable()
+	// return filepath.Dir(ex)
+	return "."
 }
 
 // Download single file and attribute specific permissions to it
