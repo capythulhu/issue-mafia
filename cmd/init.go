@@ -13,13 +13,13 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize config file",
-	Long:  "Execute the config file creation wizard that sets up\nyour .issue-mafia file, containing the issue-mafia\nhooks repository.",
+	Long:  "Execute the config file creation wizard that sets up your .issue-mafia file, containing the issue-mafia hooks repository.",
 	Run: func(cmd *cobra.Command, args []string) {
 		currentPath := util.GetCurrentDir()
 		dirIsRepo, dirHasConfig := util.IsRepo(currentPath), util.HasConfig(currentPath)
 		// Check if remote repository has hook files
 		if !dirIsRepo {
-			fmt.Print("Hang on! This does not look like a Git repository\n(which means issue-mafia won't be able to synchronize\nhooks). Do you want to proceed anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
+			fmt.Println("Hang on! This does not look like a Git repository (which means issue-mafia won't be able to synchronize hooks).\nDo you want to proceed anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
 			var answer string
 			fmt.Scanf("%s", &answer)
 			fmt.Print("\u001b[0m")
@@ -30,7 +30,7 @@ var initCmd = &cobra.Command{
 			}
 		}
 		if dirHasConfig {
-			fmt.Print("It appears this directory already contains an issue-mafia\nconfiguration file. Continuing the process will overwrite\nsettings. Do you want to proceed anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
+			fmt.Println("It appears this directory already contains an issue-mafia configuration file.\nContinuing the process will overwrite settings. Do you want to proceed anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
 			var answer string
 			fmt.Scanf("%s", &answer)
 			fmt.Print("\u001b[0m")
@@ -40,7 +40,8 @@ var initCmd = &cobra.Command{
 				util.WarningLogger.Fatalln("no files generated.")
 			}
 		}
-		fmt.Print("Welcome to issue-mafia! Please, type the repository with\nwhich you would like to synchronize Git hooks: \u001b[90mgithub.com/\u001b[0m\u001b[1m")
+		fmt.Println("Welcome to issue-mafia! Please, type the repository with which you would like to synchronize Git hooks:")
+		fmt.Print("\u001b[90mgithub.com/\u001b[0m\u001b[1m")
 
 		// Get repository
 		var repo string
@@ -62,11 +63,10 @@ var initCmd = &cobra.Command{
 		fmt.Println()
 
 		// Get branch
-		fmt.Print("Please, specify the branch that issue-mafia should look\nfor hooks \u001b[90m(default is \u001b[1mmain\u001b[0m\u001b[90m)\u001b[0m:\u001b[1m")
+		fmt.Println("Please, specify the branch that issue-mafia should look for hooks \u001b[90m(default is \u001b[1mmain\u001b[0m\u001b[90m)\u001b[0m:\u001b[1m")
 		var branch string
 		fmt.Scanf("%s", &branch)
 		fmt.Print("\u001b[0m")
-		fmt.Println()
 
 		if branch == "" {
 			branch = "main"
@@ -88,7 +88,7 @@ var initCmd = &cobra.Command{
 		// Check if remote repository has hook files
 		if len(files) == 0 {
 			fmt.Println()
-			fmt.Print("This does not look like an issue-mafia repository.\nDo you want to add it anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
+			fmt.Println("This does not look like an issue-mafia repository. Do you want to add it anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
 			var answer string
 			fmt.Scanf("%s", &answer)
 			fmt.Print("\u001b[0m")
@@ -105,8 +105,9 @@ var initCmd = &cobra.Command{
 		fmt.Fprintf(f, "%s %s", repo, branch)
 		f.Close()
 		fmt.Println()
-		fmt.Println("Configuration file created successfully! Run \u001b[100m issue-mafia \u001b[0m\nto synchronize hooks.")
-		fmt.Println("\u001b[1mAlways make sure that you trust the repository that you are\nexecuting scripts from!\u001b[0m")
+		fmt.Println("Configuration file created successfully! Run \u001b[90missue-mafia\u001b[0m to synchronize hooks.")
+		fmt.Println()
+		fmt.Println("\u001b[1mAlways make sure you trust the repository that you are executing scripts from!\u001b[0m")
 	},
 }
 

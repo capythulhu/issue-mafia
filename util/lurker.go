@@ -58,7 +58,7 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 	dirIsRepo, dirHasConfig = IsRepo(path), HasConfig(path)
 	if !dirIsRepo || !dirHasConfig {
 		if dirHasConfig && !dirIsRepo {
-			ErrorLogger.Println(path, "has an \u001b[100m .issue-mafia \u001b[0m config file, but is not a git repository.")
+			ErrorLogger.Println(path, "has an \u001b[90m.issue-mafia\u001b[0m config file, but is not a git repository.")
 		}
 		return dirIsRepo, dirHasConfig, false
 	}
@@ -93,7 +93,14 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 	wg.Wait()
 
 	// Log success
-	InfoLogger.Println(path, "hooks synchronized from github.com/"+repo)
+	var readablePath string
+	if path == "." {
+		readablePath = "current repository"
+	} else {
+		readablePath = path
+	}
+
+	InfoLogger.Println(readablePath, "hooks synchronized from github.com/"+repo)
 
 	return dirIsRepo, dirHasConfig, true
 }
@@ -129,7 +136,7 @@ func ScanDirs() []string {
 			if err != nil {
 				return err
 			}
-			if IsRepo(path) && HasConfig(path) {
+			if IsRepo(path) && HasConfig(path) && currentPath != path {
 				paths = append(paths, path)
 			}
 			return nil
