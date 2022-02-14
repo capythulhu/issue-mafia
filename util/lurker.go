@@ -127,7 +127,8 @@ func RevertRepo(path string, hard bool) {
 		if !ok {
 			return
 		}
-		files, status := FetchIntersectingFiles(repo, branch)
+		var status int
+		files, status = FetchIntersectingFiles(repo, branch)
 		if files == nil {
 			ErrorLogger.Fatalln("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
 		}
