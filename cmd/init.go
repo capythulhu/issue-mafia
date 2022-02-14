@@ -40,7 +40,7 @@ var initCmd = &cobra.Command{
 				util.WarningLogger.Fatalln("no files generated.")
 			}
 		}
-		fmt.Println("Welcome to issue-mafia! Please, type the repository with which you would like to synchronize Git hooks:")
+		fmt.Println("Welcome to issue-mafia!\nPlease, type the repository with which you would like to synchronize Git hooks:")
 		fmt.Print("\u001b[90mgithub.com/\u001b[0m\u001b[1m")
 
 		// Get repository

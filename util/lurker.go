@@ -121,7 +121,6 @@ func RevertRepo(path string, hard bool) {
 
 	// Fetch files from remote repo
 	var files []string
-	var repo string
 	if !hard {
 		// Read configuration file
 		repo, branch, ok := readConfigFile(path)
@@ -154,13 +153,10 @@ func RevertRepo(path string, hard bool) {
 	// Wait for downloads to be finished
 	wg.Wait()
 
+	// Delete config file
 	os.Remove(path + "/.issue-mafia")
 
-	if !hard {
-		InfoLogger.Println("hooks from github.com/"+repo, "removed successfully.")
-	} else {
-		InfoLogger.Println("hooks from local repository removed successfully.")
-	}
+	InfoLogger.Println("hooks from local repository removed successfully.")
 }
 
 // Read configuration file on directory
