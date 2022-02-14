@@ -155,15 +155,17 @@ func ScanDirs() []string {
 	paths := []string{}
 	filepath.WalkDir(".",
 		func(path string, d fs.DirEntry, err error) error {
+			if !d.IsDir() {
+				return nil
+			}
 			if err != nil {
 				return err
 			}
-			if IsRepo(path) && HasConfig(path) && path == "." {
+			if IsRepo(path) && HasConfig(path) && path != "." {
 				paths = append(paths, path)
 			}
 			return nil
 		})
-
 	return paths
 }
 
@@ -171,19 +173,18 @@ func ScanDirs() []string {
 func UpdateRepos(paths []string) {
 	// Wait group for download synchronization
 	var wg sync.WaitGroup
-
 	// Recursively update repositories
 	updatedRepos := 0
 	for _, path := range paths {
 		if path != "." {
 			wg.Add(1)
-			go func() {
+			go func(path string) {
 				defer wg.Done()
 				_, _, ok := UpdateRepo(path)
 				if ok {
 					updatedRepos++
 				}
-			}()
+			}(path)
 		}
 	}
 
@@ -196,6 +197,6 @@ func UpdateRepos(paths []string) {
 	} else if updatedRepos == 1 {
 		InfoLogger.Println("1 repository synchronized successfully.")
 	} else {
-		InfoLogger.Println(updatedRepos, " repositories synchronized successfully.")
+		InfoLogger.Println(updatedRepos, "repositories synchronized successfully.")
 	}
 }
