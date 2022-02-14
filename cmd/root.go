@@ -30,8 +30,7 @@ var rootCmd = &cobra.Command{
 				util.InfoLogger.Println("updating current repository...")
 			}
 			// Update current repository (if avaliable)
-			currentPath := util.GetCurrentDir()
-			dirIsRepo, dirHasConfig, _ := util.UpdateRepo(currentPath)
+			dirIsRepo, dirHasConfig, _ := util.UpdateRepo(".")
 
 			// Show error messages for current repository
 			if !recursive && !dirHasConfig {

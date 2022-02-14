@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 )
 
 var hooks = map[string]struct{}{
@@ -26,6 +27,37 @@ var hooks = map[string]struct{}{
 	"post-update":        {},
 	"post-receive":       {},
 	"fsmonitor-watchman": {},
+}
+
+// Download single file and attribute specific permissions to it
+func downloadFile(path, url string) error {
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
+func DownloadHook(path, hook, repo, branch string) {
+	completePath := path + "/.git/hooks/" + hook
+	downloadFile(completePath, "https://raw.githubusercontent.com/"+repo+"/"+branch+"/"+hook)
+	os.Chmod(completePath, 0700)
+}
+
+func DeleteHook(path, hook string) {
+	os.Remove(path + "/.git/hooks/" + hook)
 }
 
 func FetchRepository(repo string) int {

@@ -15,8 +15,7 @@ var initCmd = &cobra.Command{
 	Short: "Initialize config file",
 	Long:  "Execute the config file creation wizard that sets up your .issue-mafia file, containing the issue-mafia hooks repository.",
 	Run: func(cmd *cobra.Command, args []string) {
-		currentPath := util.GetCurrentDir()
-		dirIsRepo, dirHasConfig := util.IsRepo(currentPath), util.HasConfig(currentPath)
+		dirIsRepo, dirHasConfig := util.IsRepo("."), util.HasConfig(".")
 		// Check if remote repository has hook files
 		if !dirIsRepo {
 			fmt.Println("Hang on! This does not look like a Git repository (which means issue-mafia won't be able to synchronize hooks).\nDo you want to proceed anyway? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")

@@ -16,7 +16,6 @@ var removeCmd = &cobra.Command{
 		// Formatting flag
 		hard, _ := cmd.Flags().GetBool("hard")
 
-		currentPath := util.GetCurrentDir()
 		// Check if remote repository has hook files
 		fmt.Println("Warning! This action will remove all hooks synchronized by issue-mafia, including its configuration file (if present).\nDo you really want to proceed? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
 		var answer string
@@ -28,7 +27,7 @@ var removeCmd = &cobra.Command{
 			util.WarningLogger.Fatalln("no changes made.")
 		}
 
-		util.RevertRepo(currentPath, hard)
+		util.CleanRepo(".", hard)
 	},
 }
 

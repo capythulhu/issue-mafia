@@ -2,9 +2,7 @@ package util
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,34 +20,6 @@ func IsRepo(path string) bool {
 func HasConfig(path string) bool {
 	_, err := os.Stat(path + "/.issue-mafia")
 	return err == nil
-}
-
-// Get current directory path
-func GetCurrentDir() string {
-	// ex, _ := os.Executable()
-	// return filepath.Dir(ex)
-	return "."
-}
-
-// Download single file and attribute specific permissions to it
-func downloadFile(path string, url string) error {
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Create the file
-	out, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	return err
 }
 
 // Update individual repository
@@ -84,9 +54,7 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 		wg.Add(1)
 		go func(file string) {
 			defer wg.Done()
-			completePath := path + "/.git/hooks/" + file
-			downloadFile(completePath, "https://raw.githubusercontent.com/"+repo+"/"+branch+"/"+file)
-			os.Chmod(completePath, 0700)
+			DownloadHook(path, file, repo, branch)
 		}(file)
 	}
 
@@ -106,8 +74,8 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 	return dirIsRepo, dirHasConfig, true
 }
 
-// Revert individual repository
-func RevertRepo(path string, hard bool) {
+// Clean individual repository
+func CleanRepo(path string, hard bool) {
 	// Check if directory is repository and if it has config file
 	dirIsRepo, dirHasConfig := IsRepo(path), HasConfig(path)
 	// Check if local directory has config file
@@ -147,7 +115,7 @@ func RevertRepo(path string, hard bool) {
 		wg.Add(1)
 		go func(file string) {
 			defer wg.Done()
-			os.Remove(path + "/.git/hooks/" + file)
+			DeleteHook(path, file)
 		}(file)
 	}
 
@@ -185,13 +153,12 @@ func readConfigFile(path string) (repo, branch string, ok bool) {
 // Scan directories in folder
 func ScanDirs() []string {
 	paths := []string{}
-	currentPath := GetCurrentDir()
-	filepath.WalkDir(currentPath,
+	filepath.WalkDir(".",
 		func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if IsRepo(path) && HasConfig(path) && currentPath != path {
+			if IsRepo(path) && HasConfig(path) && path == "." {
 				paths = append(paths, path)
 			}
 			return nil
@@ -202,16 +169,13 @@ func ScanDirs() []string {
 
 // Update repositories
 func UpdateRepos(paths []string) {
-	// Get current path
-	currentPath := GetCurrentDir()
-
 	// Wait group for download synchronization
 	var wg sync.WaitGroup
 
 	// Recursively update repositories
 	updatedRepos := 0
 	for _, path := range paths {
-		if path != currentPath {
+		if path != "." {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
