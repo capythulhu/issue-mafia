@@ -73,6 +73,7 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 	files, status := FetchIntersectingFiles(repo, branch)
 	if files == nil {
 		ErrorLogger.Println("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
+		return dirIsRepo, dirHasConfig, false
 	}
 
 	// Wait group for download synchronization
@@ -100,7 +101,7 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 		readablePath = path
 	}
 
-	InfoLogger.Println(readablePath, "hooks synchronized from github.com/"+repo)
+	InfoLogger.Println(readablePath, "hooks synchronized from github.com/"+repo, "successfully")
 
 	return dirIsRepo, dirHasConfig, true
 }
@@ -123,6 +124,7 @@ func RevertRepo(path string) {
 	files, status := FetchIntersectingFiles(repo, branch)
 	if files == nil {
 		ErrorLogger.Println("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
+		return
 	}
 
 	// Wait group for download synchronization
@@ -141,8 +143,6 @@ func RevertRepo(path string) {
 	wg.Wait()
 
 	InfoLogger.Println("hooks from github.com/"+repo, "removed successfully.")
-
-	return
 }
 
 // Read configuration file on directory
