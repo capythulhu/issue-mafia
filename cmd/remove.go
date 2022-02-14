@@ -13,18 +13,12 @@ var removeCmd = &cobra.Command{
 	Short: "Remove syncronized hooks",
 	Long:  "Delete all Git hooks synchronized by issue-mafia and its config file.",
 	Run: func(cmd *cobra.Command, args []string) {
+		// Formatting flag
+		hard, _ := cmd.Flags().GetBool("hard")
+
 		currentPath := util.GetCurrentDir()
-		dirIsRepo, dirHasConfig := util.IsRepo(currentPath), util.HasConfig(currentPath)
-		// Check if local directory has config file
-		if !dirHasConfig {
-			util.ErrorLogger.Fatalln("current directory has no \u001b[90m.issue-mafia\u001b[0m config file.")
-		}
-		// Check if local directory is repository
-		if !dirIsRepo {
-			util.ErrorLogger.Fatalln("current directory is not a git repository.")
-		}
 		// Check if remote repository has hook files
-		fmt.Println("Warning! This action will remove all hooks synchronized by issue-mafia, including its configuration file.\nDo you really want to proceed? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
+		fmt.Println("Warning! This action will remove all hooks synchronized by issue-mafia, including its configuration file (if present).\nDo you really want to proceed? \u001b[90m(\u001b[1mY\u001b[0m\u001b[90m/\u001b[1mn\u001b[0m\u001b[90m)\u001b[0m: \u001b[1m")
 		var answer string
 		fmt.Scanf("%s", &answer)
 		fmt.Print("\u001b[0m")
@@ -34,10 +28,13 @@ var removeCmd = &cobra.Command{
 			util.WarningLogger.Fatalln("no changes made.")
 		}
 
-		util.RevertRepo(currentPath)
+		util.RevertRepo(currentPath, hard)
 	},
 }
 
 func init() {
+	// Formatting flag
+	removeCmd.Flags().Bool("hard", false, "remove all hooks on repository")
+
 	rootCmd.AddCommand(removeCmd)
 }

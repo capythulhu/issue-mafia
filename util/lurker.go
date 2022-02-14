@@ -107,24 +107,36 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 }
 
 // Revert individual repository
-func RevertRepo(path string) {
+func RevertRepo(path string, hard bool) {
 	// Check if directory is repository and if it has config file
 	dirIsRepo, dirHasConfig := IsRepo(path), HasConfig(path)
-	if !dirIsRepo || !dirHasConfig {
-		return
+	// Check if local directory has config file
+	if !dirHasConfig && !hard {
+		ErrorLogger.Fatalln("current directory has no \u001b[90m.issue-mafia\u001b[0m config file.")
 	}
-
-	// Read configuration file
-	repo, branch, ok := readConfigFile(path)
-	if !ok {
-		return
+	// Check if local directory is repository
+	if !dirIsRepo {
+		ErrorLogger.Fatalln("current directory is not a git repository.")
 	}
 
 	// Fetch files from remote repo
-	files, status := FetchIntersectingFiles(repo, branch)
-	if files == nil {
-		ErrorLogger.Println("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
-		return
+	var files []string
+	var repo string
+	if !hard {
+		// Read configuration file
+		repo, branch, ok := readConfigFile(path)
+		if !ok {
+			return
+		}
+		files, status := FetchIntersectingFiles(repo, branch)
+		if files == nil {
+			ErrorLogger.Fatalln("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
+		}
+	} else {
+		// Add all possible hooks to blacklist
+		for k := range hooks {
+			files = append(files, k)
+		}
 	}
 
 	// Wait group for download synchronization
@@ -142,7 +154,13 @@ func RevertRepo(path string) {
 	// Wait for downloads to be finished
 	wg.Wait()
 
-	InfoLogger.Println("hooks from github.com/"+repo, "removed successfully.")
+	os.Remove(path + "/.issue-mafia")
+
+	if !hard {
+		InfoLogger.Println("hooks from github.com/"+repo, "removed successfully.")
+	} else {
+		InfoLogger.Println("hooks from local repository removed successfully.")
+	}
 }
 
 // Read configuration file on directory
