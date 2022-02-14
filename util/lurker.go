@@ -105,6 +105,46 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 	return dirIsRepo, dirHasConfig, true
 }
 
+// Revert individual repository
+func RevertRepo(path string) {
+	// Check if directory is repository and if it has config file
+	dirIsRepo, dirHasConfig := IsRepo(path), HasConfig(path)
+	if !dirIsRepo || !dirHasConfig {
+		return
+	}
+
+	// Read configuration file
+	repo, branch, ok := readConfigFile(path)
+	if !ok {
+		return
+	}
+
+	// Fetch files from remote repo
+	files, status := FetchIntersectingFiles(repo, branch)
+	if files == nil {
+		ErrorLogger.Println("could not fetch files from", repo+". received status "+fmt.Sprintf("%d", status)+".")
+	}
+
+	// Wait group for download synchronization
+	var wg sync.WaitGroup
+
+	// Download files from remote repo
+	for _, file := range files {
+		wg.Add(1)
+		go func(file string) {
+			defer wg.Done()
+			os.Remove(path + "/.git/hooks/" + file)
+		}(file)
+	}
+
+	// Wait for downloads to be finished
+	wg.Wait()
+
+	InfoLogger.Println("hooks from github.com/"+repo, "removed successfully.")
+
+	return
+}
+
 // Read configuration file on directory
 func readConfigFile(path string) (repo, branch string, ok bool) {
 	// Read file
