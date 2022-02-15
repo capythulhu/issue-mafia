@@ -9,7 +9,7 @@
 To install issue-mafia Go binary, run:
 
 ```
-go install github.com/thzoid/issue-mafia
+go install github.com/thzoid/issue-mafia@latest
 ```
 
 ### Using the `help` command
