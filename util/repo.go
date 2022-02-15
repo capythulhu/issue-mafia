@@ -69,7 +69,7 @@ func UpdateRepo(path string) (dirIsRepo, dirHasConfig, ok bool) {
 		readablePath = path
 	}
 
-	InfoLogger.Println(readablePath, "hooks synchronized from github.com/"+repo, "successfully")
+	InfoLogger.Println(readablePath, "hooks synchronized from github.com/"+repo, "successfully.")
 
 	return dirIsRepo, dirHasConfig, true
 }
